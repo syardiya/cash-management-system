@@ -1,0 +1,73 @@
+# Cash Management System - Security Configuration
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "^(database\.sql|\.env|config\.php|database\.php)$">
+    Require all denied
+</FilesMatch>
+
+# Protect config directory files
+<FilesMatch "^.*\.(php|inc)$">
+    <If "%{REQUEST_URI} =~ m#/config/#">
+        Require all denied
+    </If>
+</FilesMatch>
+
+# Protect classes directory files
+<FilesMatch "^.*\.(php|inc)$">
+    <If "%{REQUEST_URI} =~ m#/classes/#">
+        Require all denied
+    </If>
+</FilesMatch>
+
+# Protect logs directory
+<FilesMatch "^.*\.log$">
+    Require all denied
+</FilesMatch>
+
+# Enable URL rewriting (optional, for clean URLs)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /cash-management-system/
+    
+    # Prevent access to config folder
+    RewriteRule ^config/ - [F,L]
+    
+    # Prevent access to classes folder
+    RewriteRule ^classes/ - [F,L]
+    
+    # Prevent access to logs folder
+    RewriteRule ^logs/ - [F,L]
+    
+    # Force HTTPS (uncomment in production)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# Set security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Content Security Policy (adjust as needed)
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:;"
+</IfModule>
+
+# PHP Security Settings (for PHP 8+)
+<IfModule mod_php.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value error_log logs/error.log
+</IfModule>
+
+# Set file upload limits
+<IfModule mod_php.c>
+    php_value upload_max_filesize 5M
+    php_value post_max_size 6M
+    php_value max_execution_time 30
+    php_value max_input_time 30
+</IfModule>

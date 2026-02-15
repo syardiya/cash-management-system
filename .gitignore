@@ -1,0 +1,22 @@
+# Config files
+/config/db_credentials.php
+/config/.env
+
+# Dependencies
+/vendor
+/node_modules
+
+# VS Code
+.vscode
+
+# System
+.DS_Store
+Thumbs.db
+
+# Logs
+/logs/*.log
+!/logs/.gitkeep
+
+# Uploads (optional - keep empty folder structure)
+/uploads/*
+!/uploads/.gitkeep
