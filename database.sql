@@ -180,6 +180,10 @@ CREATE TABLE sessions (
     INDEX idx_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Create a demo organization first (to satisfy Foreign Key for categories)
+INSERT INTO organizations (id, name, slug, email, phone, address) VALUES
+(1, 'Demo Organization', 'demo-org', 'demo@cashmanagement.com', '+62 812-3456-7890', 'Jakarta, Indonesia');
+
 -- Insert default categories
 INSERT INTO categories (organization_id, name, type, icon, color) VALUES
 (1, 'Salary', 'income', 'fa-money-bill', '#10b981'),
@@ -192,10 +196,6 @@ INSERT INTO categories (organization_id, name, type, icon, color) VALUES
 (1, 'Healthcare', 'expense', 'fa-heartbeat', '#dc2626'),
 (1, 'Education', 'expense', 'fa-graduation-cap', '#8b5cf6'),
 (1, 'Shopping', 'expense', 'fa-shopping-cart', '#f59e0b');
-
--- Create a demo organization
-INSERT INTO organizations (name, slug, email, phone, address) VALUES
-('Demo Organization', 'demo-org', 'demo@cashmanagement.com', '+62 812-3456-7890', 'Jakarta, Indonesia');
 
 -- Note: Password is 'Admin123!' (will be hashed in PHP)
 -- This is just a placeholder, actual password will be created via registration
