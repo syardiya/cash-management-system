@@ -246,10 +246,10 @@
                             type="text" 
                             name="username" 
                             class="form-control" 
-                            placeholder="Username or Email"
+                            placeholder="Username atau Email"
                             autocomplete="username"
                         >
-                        <i class="fas fa-user input-icon"></i>
+                        <i class="fas fa-user-circle input-icon"></i>
                     </div>
                     
                     <div class="input-group">

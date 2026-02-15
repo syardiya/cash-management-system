@@ -297,6 +297,79 @@ class User {
     }
     
     /**
+     * Generate password reset token
+     * @param string $email User email
+     * @return array Result with status and token info
+     */
+    public function generateResetToken($email) {
+        try {
+            $stmt = $this->conn->prepare("SELECT id, username FROM users WHERE email = ? AND status = 'active'");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch();
+            
+            if (!$user) {
+                return ['status' => false, 'message' => 'No active user found with this email'];
+            }
+            
+            $token = bin2hex(random_bytes(32));
+            $expires = date('Y-m-d H:i:s', time() + 3600); // 1 hour
+            
+            $stmt = $this->conn->prepare("UPDATE users SET password_reset_token = ?, password_reset_expires = ? WHERE id = ?");
+            $result = $stmt->execute([$token, $expires, $user['id']]);
+            
+            if ($result) {
+                return [
+                    'status' => true, 
+                    'message' => 'Reset token generated',
+                    'token' => $token,
+                    'username' => $user['username']
+                ];
+            }
+            
+            return ['status' => false, 'message' => 'Failed to generate reset token'];
+        } catch (PDOException $e) {
+            error_log("Reset Token Error: " . $e->getMessage());
+            return ['status' => false, 'message' => 'Database error occurred'];
+        }
+    }
+    
+    /**
+     * Reset password using token
+     * @param string $token Reset token
+     * @param string $new_password New password
+     * @return array Result with status and message
+     */
+    public function resetPassword($token, $new_password) {
+        try {
+            // Validate token
+            $stmt = $this->conn->prepare("SELECT id, organization_id FROM users WHERE password_reset_token = ? AND password_reset_expires > NOW()");
+            $stmt->execute([$token]);
+            $user = $stmt->fetch();
+            
+            if (!$user) {
+                return ['status' => false, 'message' => 'Invalid or expired reset token'];
+            }
+            
+            // Hash new password
+            $hash = password_hash($new_password, PASSWORD_DEFAULT);
+            
+            // Update password and clear token
+            $stmt = $this->conn->prepare("UPDATE users SET password_hash = ?, password_reset_token = NULL, password_reset_expires = NULL WHERE id = ?");
+            $result = $stmt->execute([$hash, $user['id']]);
+            
+            if ($result) {
+                $this->logActivity($user['id'], $user['organization_id'], 'password_reset', 'users', $user['id']);
+                return ['status' => true, 'message' => 'Password has been reset successfully'];
+            }
+            
+            return ['status' => false, 'message' => 'Failed to reset password'];
+        } catch (PDOException $e) {
+            error_log("Password Reset Error: " . $e->getMessage());
+            return ['status' => false, 'message' => 'Database error occurred'];
+        }
+    }
+
+    /**
      * Clean expired sessions
      */
     public function cleanExpiredSessions() {

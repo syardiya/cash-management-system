@@ -104,16 +104,29 @@ if (is_logged_in()) {
     
     <script src="assets/js/main.js"></script>
     <script>
-        document.getElementById('forgotForm').addEventListener('submit', function(e) {
+        document.getElementById('forgotForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = this.querySelector('button');
+            const formData = new FormData(this);
             setLoading(btn, true);
             
-            // Simulation
-            setTimeout(() => {
-                showAlert('If this email is registered, you will receive a reset link shortly.', 'success');
+            try {
+                const response = await fetch('api/forgot-password.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                
+                if (result.status) {
+                    showAlert(result.message, 'success');
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (err) {
+                showAlert('Terjadi kesalahan koneksi.', 'danger');
+            } finally {
                 setLoading(btn, false);
-            }, 1500);
+            }
         });
     </script>
 </body>
