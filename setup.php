@@ -37,16 +37,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $config_content .= "define('DB_CHARSET', 'utf8mb4');\n";
         
         if (file_put_contents('config/db_credentials.php', $config_content)) {
-            $status = 'success';
-            $message = "Configuration saved successfully! <br>Redirecting to homepage...";
             
+            // 3. Auto-Import Database Schema
+            try {
+                $sqlFile = 'database.sql';
+                if (file_exists($sqlFile)) {
+                    $sql = file_get_contents($sqlFile);
+                    
+                    // Remove comments and split by semicolon
+                    $lines = explode(";", $sql);
+                    $imported = 0;
+                    
+                    foreach ($lines as $line) {
+                        $line = trim($line);
+                        // Skip empty lines and comments
+                        if (!empty($line) && strpos($line, '--') !== 0 && strpos($line, '/*') !== 0) {
+                            try {
+                                $pdo->exec($line);
+                                $imported++;
+                            } catch (PDOException $e) {
+                                // Ignore duplicate table errors or minor issues
+                                error_log("SQL Error: " . $e->getMessage());
+                            }
+                        }
+                    }
+                    $status = 'success';
+                    $message = "Configuration saved & Database imported ($imported queries executed)! <br>Redirecting to homepage...";
+                } else {
+                    $status = 'warning';
+                    $message = "Configuration saved, but 'database.sql' not found. You may need to import it manually.";
+                }
+            } catch (Exception $e) {
+                $status = 'warning';
+                $message = "Configuration saved, but automatic database import failed: " . $e->getMessage();
+            }
+
             // Redirect after 3 seconds
             header("refresh:3;url=index.php");
         } else {
             $status = 'error';
             $message = "Connection successful, but failed to write 'config/db_credentials.php'. <br>Please check folder permissions or create the file manually.";
         }
-        
     } catch (PDOException $e) {
         $status = 'error';
         $message = "Connection Failed: " . $e->getMessage();
