@@ -1,7 +1,9 @@
 <?php
 /**
  * Setup Admin User Script
- * Resolves "Invalid Credentials" issue by creating/resetting admin user
+ * Resolves "Invalid Credentials" issue.
+ * Useful for quick access if registration has issues.
+ * PENTING: Jika menggunakan hosting, pastikan Anda REGISTRASI dulu di register.php.
  */
 
 require_once 'config/config.php';

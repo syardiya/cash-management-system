@@ -150,7 +150,7 @@
                 </div>
                 
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-12">
                         <div class="input-group">
                             <i class="fas fa-phone input-icon"></i>
                             <input 
@@ -161,7 +161,10 @@
                             >
                         </div>
                     </div>
-                    <div class="col-6">
+                </div>
+                
+                <div class="row">
+                    <div class="col-12">
                         <div class="input-group">
                             <i class="fas fa-map-marker-alt input-icon"></i>
                             <input 
