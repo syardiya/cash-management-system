@@ -41,12 +41,8 @@ class User {
                 return ['status' => false, 'message' => 'Username already taken'];
             }
             
-            // Hash password using Argon2id (or bcrypt as fallback)
-            if (defined('PASSWORD_ARGON2ID')) {
-                $password_hash = password_hash($data['password'], PASSWORD_ARGON2ID);
-            } else {
-                $password_hash = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]);
-            }
+            // Use BCRYPT for maximum compatibility on shared/free hosting
+            $password_hash = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 10]);
             
             // Generate email verification token
             $verification_token = bin2hex(random_bytes(32));

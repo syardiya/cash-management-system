@@ -42,8 +42,8 @@ try {
     $stmt->execute([$username]);
     $user = $stmt->fetch();
     
-    // Hash password with compatibility
-    $hash = password_hash($password, PASSWORD_DEFAULT);
+    // Use BCRYPT for compatibility
+    $hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 10]);
     
     if ($user) {
         echo "<p>Resetting password for user '$username'...</p>";

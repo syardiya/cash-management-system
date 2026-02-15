@@ -11,6 +11,8 @@ try {
     $db = Database::getInstance();
     $conn = $db->getConnection();
     
+    echo "<p><strong>PHP Version:</strong> " . phpversion() . "</p>";
+
     // 1. Check Organizations
     echo "<h2>🏢 Organizations</h2>";
     $stmt = $conn->query("SELECT id, name, slug, member_access_code, status FROM organizations");
@@ -35,17 +37,18 @@ try {
     
     // 2. Check Users
     echo "<h2>👤 Users (Admins/Sub-accounts)</h2>";
-    $stmt = $conn->query("SELECT u.id, u.organization_id, u.username, u.email, u.role, u.status, o.slug as org_slug 
+    $stmt = $conn->query("SELECT u.id, u.organization_id, u.username, u.email, u.role, u.status, u.password_hash, o.slug as org_slug 
                           FROM users u 
                           JOIN organizations o ON u.organization_id = o.id");
     $users = $stmt->fetchAll();
     
     if (empty($users)) {
-        echo "<p style='color: red;'>No users found! Please Register first at register.php.</p>";
+        echo "<p style='color: red;'>No users found! Please Register first at register.php or run setup_admin.php.</p>";
     } else {
         echo "<table border='1' cellpadding='5' style='border-collapse: collapse;'>";
-        echo "<tr><th>ID</th><th>Org ID</th><th>Org Slug</th><th>Username (for Admin Login)</th><th>Email</th><th>Role</th><th>Status</th></tr>";
+        echo "<tr><th>ID</th><th>Org ID</th><th>Org Slug</th><th>Username (for Admin Login)</th><th>Email</th><th>Role</th><th>Status</th><th>Password Test</th></tr>";
         foreach ($users as $user) {
+            $is_demo_pass = password_verify('Admin123!', $user['password_hash']);
             echo "<tr>";
             echo "<td>{$user['id']}</td>";
             echo "<td>{$user['organization_id']}</td>";
@@ -54,6 +57,7 @@ try {
             echo "<td>{$user['email']}</td>";
             echo "<td>{$user['role']}</td>";
             echo "<td>{$user['status']}</td>";
+            echo "<td>" . ($is_demo_pass ? "<span style='color: green;'>Match 'Admin123!'</span>" : "<span style='color: orange;'>Custom Password</span>") . "</td>";
             echo "</tr>";
         }
         echo "</table>";
