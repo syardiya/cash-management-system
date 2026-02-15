@@ -16,8 +16,7 @@ try {
     $tables = ['organizations', 'users', 'categories', 'transactions', 'account_sources'];
     echo "<ul>";
     foreach ($tables as $t) {
-        $stmt = $conn->prepare("SHOW TABLES LIKE ?");
-        $stmt->execute([$t]);
+        $stmt = $conn->query("SHOW TABLES LIKE '$t'");
         $exists = $stmt->fetch();
         echo "<li>Table <strong>$t</strong>: " . ($exists ? "<span style='color:green;'>OK</span>" : "<span style='color:red;'>MISSING!</span>") . "</li>";
     }
