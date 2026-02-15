@@ -15,24 +15,32 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
-    // Get POST data
+    // --- BETTER VALIDATION ---
     $org_name = sanitize_input($_POST['org_name'] ?? '');
     $org_email = sanitize_input($_POST['org_email'] ?? '');
-    $org_phone = sanitize_input($_POST['org_phone'] ?? '');
-    $org_address = sanitize_input($_POST['org_address'] ?? '');
+    // ... existing sanitization ...
     
-    $full_name = sanitize_input($_POST['full_name'] ?? '');
-    $username = sanitize_input($_POST['username'] ?? '');
-    $email = sanitize_input($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $db = Database::getInstance();
+    $conn = $db->getConnection();
     
-    // Validate required fields
-    if (empty($org_name) || empty($org_email) || empty($full_name) || 
-        empty($username) || empty($email) || empty($password)) {
-        echo json_encode(['status' => false, 'message' => 'All required fields must be filled']);
+    // 1. Check if organization or user already exists BEFORE starting
+    $stmt = $conn->prepare("SELECT id FROM organizations WHERE email = ? OR name = ?");
+    $stmt->execute([$org_email, $org_name]);
+    if ($stmt->fetch()) {
+        echo json_encode(['status' => false, 'message' => 'Organisasi atau Email Organisasi sudah terdaftar. Silakan gunakan nama/email lain.']);
         exit;
     }
     
+    $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
+    $stmt->execute([$username, $email]);
+    if ($stmt->fetch()) {
+        echo json_encode(['status' => false, 'message' => 'Username atau Email User sudah terdaftar.']);
+        exit;
+    }
+
+    // 2. Start TRANSACTION
+    $conn->beginTransaction();
+
     // Create organization
     $organizationObj = new Organization();
     $orgResult = $organizationObj->create([
@@ -43,6 +51,7 @@ try {
     ]);
     
     if (!$orgResult['status']) {
+        $conn->rollBack();
         echo json_encode($orgResult);
         exit;
     }
@@ -59,20 +68,27 @@ try {
     ]);
     
     if (!$userResult['status']) {
+        $conn->rollBack();
         echo json_encode($userResult);
         exit;
     }
     
+    // Success - Commit everything
+    $conn->commit();
+
     echo json_encode([
         'status' => true,
-        'message' => 'Registration successful! You can now login with your credentials.',
+        'message' => 'Registrasi Berhasil! Silakan login dengan akun yang baru Anda buat.',
         'access_code' => $orgResult['access_code'] ?? null
     ]);
     
 } catch (Exception $e) {
+    if (isset($conn) && $conn->inTransaction()) {
+        $conn->rollBack();
+    }
     error_log("Registration API Error: " . $e->getMessage());
     echo json_encode([
         'status' => false,
-        'message' => 'Registration failed. Please try again.'
+        'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
     ]);
 }
